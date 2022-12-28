@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  database:
+    image: postgres
+    restart: always
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+    environment:
+      POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    networks:
+      - dbnetwork
+
+  server:
+    image: juniorconseiltaker-hr
+    build:
+      dockerfile: docker/Dockerfile
+      context: ../
+    restart: always
+    ports:
+      - ${API_PORT}:${API_PORT}
+    depends_on:
+      - database
+    networks:
+      - dbnetwork
+
+networks:
+  dbnetwork: {}
