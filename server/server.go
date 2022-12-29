@@ -3,13 +3,17 @@ package server
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/sessions"
+	"os"
 )
 
 type Server struct {
 	Def *gin.Engine
 }
 
-func InitServer() Server {
+var Store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+
+func InitServer() (Server) {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
@@ -21,7 +25,9 @@ func InitServer() Server {
 		AllowWebSockets:  false,
 	}))
 
-	server := Server{Def: router}
+	server := Server{
+		Def: router,
+	}
 
 	return server
 }

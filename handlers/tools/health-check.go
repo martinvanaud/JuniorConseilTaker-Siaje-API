@@ -1,12 +1,12 @@
-package middlewares
+package tools
 
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func RouteNotFound(context *gin.Context) {
+func Status(context *gin.Context) {
 	context.JSON(http.StatusNotFound, gin.H{
-		"message": "Route Does Not Exists",
+		"message": "Server is running ...",
 	})
 }
