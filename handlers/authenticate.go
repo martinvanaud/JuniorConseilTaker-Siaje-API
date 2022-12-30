@@ -19,10 +19,10 @@ type AuthenticationPayload struct {
 
 func Authenticate(context *gin.Context) {
 
-	session, _ := server.Store.Get(context.Request, "je-session")
-
 	siajeAuthenticationEndpoint := "https://pro.siaje.com/jctaker/connexion.php?r=index.php"
-	authorized_url := "https://pro.siaje.com/jctaker/index.php"
+
+	const authorizedUrl string = "https://pro.siaje.com/jctaker/index.php"
+	const unauthorizedUrl string = "https://pro.siaje.com/jctaker/connexion.php?m=error"
 
 	method := "POST"
 
@@ -43,19 +43,26 @@ func Authenticate(context *gin.Context) {
 
 	payload := strings.NewReader(apiRequestPayload.Encode())
 
-	authentication_successful := false
+	authenticationSuccessful := false
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			if len(via) > 1 {
-				if req.Header.Get("Referer") == authorized_url {
-					authentication_successful = true
-					return http.ErrUseLastResponse
-				}
+
+			forwardUrl := req.URL.String()
+
+			fmt.Println("forwarding to: ", forwardUrl)
+
+			if forwardUrl == authorizedUrl {
+				authenticationSuccessful = true
+				return http.ErrUseLastResponse
+			} else if forwardUrl == unauthorizedUrl {
+				return http.ErrUseLastResponse
 			}
 			return nil
 		},
+		Jar: server.CookieJar,
 	}
+
 	req, err := http.NewRequest(method, siajeAuthenticationEndpoint, payload)
 
 	if err != nil {
@@ -71,17 +78,23 @@ func Authenticate(context *gin.Context) {
 	}
 	defer res.Body.Close()
 
+	var token string
+
 	for _, cookie := range res.Cookies() {
+		fmt.Println("cookie:", cookie)
 		if strings.Compare(cookie.Name, "PHPSESSID") == 0 {
-			session.Values["PHPSESSID"] = cookie.Value
-			session.Save(context.Request, context.Writer)
+			token = cookie.Value
+
+			urlObj, _ := url.Parse("http://localhost:8018/")
+			client.Jar.SetCookies(urlObj, []*http.Cookie{cookie})
+
 		}
 	}
 
-	if authentication_successful {
+	if authenticationSuccessful {
 		context.JSON(http.StatusOK, gin.H{
 			"code":  http.StatusOK,
-			"token": session.Values["PHPSESSID"],
+			"token": token,
 		})
 	} else {
 		context.JSON(http.StatusUnauthorized, gin.H{
