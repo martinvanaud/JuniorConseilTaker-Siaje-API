@@ -1,15 +1,11 @@
-FROM node:16.10-alpine
+FROM golang:1.18-alpine
 
-RUN apk add --no-cache python3 make g++ poppler-utils openjdk11
+WORKDIR /siaje-api/app/golang/
 
-USER node
-RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+COPY . .
 
-WORKDIR /home/node/app
-COPY --chown=node:node . /home/node/app
-RUN npm install
+RUN go mod tidy
 
-EXPOSE 3000
+EXPOSE 8018
 
-ENTRYPOINT ["npm"]
-CMD [ "run", "start:dev", "--tsc" ]
+CMD go run .
