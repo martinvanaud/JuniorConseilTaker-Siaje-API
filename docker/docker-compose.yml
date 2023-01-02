@@ -1,27 +1,35 @@
-version: "3"
+version: "3.9"
+
+x-gorm: &gorm-env
+  POSTGRES_HOST: ${POSTGRES_HOST}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PORT: ${POSTGRES_PORT}
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
 services:
   database:
-    image: postgres
+    image: postgres:12
+    container_name: database
     restart: always
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
     environment:
-      POSTGRES_DB: ${POSTGRES_NAME}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      <<: *gorm-env
     networks:
       - dbnetwork
 
   server:
     image: juniorconseiltaker-hr
+    container_name: siaje-api
     build:
       dockerfile: docker/Dockerfile
       context: ../
     restart: always
     ports:
       - ${API_PORT}:${API_PORT}
+    environment:
+      <<: *gorm-env
     depends_on:
       - database
     networks:

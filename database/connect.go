@@ -1,28 +1,57 @@
 package database
 
 import (
-	"database/sql"
-
 	"fmt"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"log"
 	"os"
+	"strconv"
 )
 
-func Configure() (*sql.DB, error) {
-	client, err := sql.Open("postgres",
-		fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
-			os.Getenv("POSTGRES_HOST"),
-			os.Getenv("POSTGRES_PORT"),
-			os.Getenv("POSTGRES_USER"),
-			os.Getenv("POSTGRES_NAME"),
-			os.Getenv("POSTGRES_PASSWORD"),
-		))
+type PostgresConfig struct {
+	Host     string `env:"POSTGRES_HOST"`
+	Port     int    `env:"POSTGRES_PORT"`
+	User     string `env:"POSTGRES_USER"`
+	Password string `env:"POSTGRES_PASSWORD"`
+	Name     string `env:"POSTGRES_DB"`
+}
 
+func GetPostgresConnectionInfo(c PostgresConfig) string {
+	return fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		c.Host, c.Port, c.User, c.Password, c.Name)
+}
+
+func GetPostgresConfig() PostgresConfig {
+	port, err := strconv.Atoi(os.Getenv("POSTGRES_PORT"))
 	if err != nil {
-		log.Fatalf("postgresql: could not proerly setup instance %v", err)
+		panic(err)
+	}
+
+	return PostgresConfig{
+		Host:     os.Getenv("POSTGRES_HOST"),
+		User:     os.Getenv("POSTGRES_USER"),
+		Port:     port,
+		Name:     os.Getenv("POSTGRES_DB"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+	}
+}
+
+func Configure() {
+
+	envParameters := GetPostgresConfig()
+	config := GetPostgresConnectionInfo(envParameters)
+
+	fmt.Println(config)
+
+	db, postgresErr := gorm.Open(postgres.Open(config))
+
+	if postgresErr != nil {
+		log.Fatalf("Error could not initialize database: %v", postgresErr)
 	} else {
 		fmt.Println("Postgres database is ready")
 	}
 
-	return client, err
+	DB = db
 }

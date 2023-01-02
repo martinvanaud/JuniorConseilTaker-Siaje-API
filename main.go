@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/joho/godotenv"
-
 	"juniorconseiltaker-siaje-api/router"
 	"juniorconseiltaker-siaje-api/server"
 
@@ -18,17 +17,8 @@ func main() {
 		return
 	}
 
-	//hrDatabase, errorDatabase := database.Configure()
-	//if errorDatabase != nil {
-	//	log.Fatalf("database: could not properly setup instance %v", errorDatabase)
-	//}
-	//
-	//defer func(hrDatabase *sql.DB) {
-	//	err := hrDatabase.Close()
-	//	if err != nil {
-	//
-	//	}
-	//}(hrDatabase)
+	//database.Configure()
+	//database.DB.AutoMigrate(&models.EtudiantModel{})
 
 	hrServer := server.InitServer()
 
